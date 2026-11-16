@@ -56,4 +56,11 @@ CREATE TABLE IF NOT EXISTS otps (
   expires_at timestamptz NOT NULL, used_at timestamptz, created_at timestamptz NOT NULL DEFAULT now());
 CREATE INDEX IF NOT EXISTS otps_contact ON otps (contact);
 CREATE TABLE IF NOT EXISTS kv (key text PRIMARY KEY, value jsonb, updated_at timestamptz NOT NULL DEFAULT now());
+-- Hosts like Supabase expose the public schema through a web API. Row-level security with no policies
+-- blocks that API; the site itself connects as the table owner, which RLS does not restrict.
+DO $$ DECLARE t text; BEGIN
+  FOR t IN SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND NOT rowsecurity LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
+  END LOOP;
+END $$;
 `;
